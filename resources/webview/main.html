@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Akkhar SR</title>
+  <link rel="stylesheet" href="{{styleUri}}">
+</head>
+
+<body>
+  <textarea id="patchInput" placeholder="Paste <<<<<<< SEARCH / REPLACE blocks here..."></textarea>
+  <div style="display: flex; flex-direction: column; gap: 4px;">
+    <button id="previewBtn">Preview Bulk Diff</button>
+    <div style="display: flex; gap: 4px;">
+      <button id="executeBtn" style="flex: 1;">Execute Patch</button>
+      <button id="clearBtn" style="background: #333;">Clear</button>
+    </div>
+  </div>
+  <div id="diagnostics"></div>
+  <script src="{{scriptUri}}"></script>
+</body>
+
+</html>

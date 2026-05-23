@@ -1,0 +1,39 @@
+body {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+textarea {
+  width: 100%;
+  height: 300px;
+  font-family: monospace;
+  border: 1px solid #333;
+  background: #1e1e1e;
+  color: #ccc;
+  resize: none;
+  overflow: hidden;
+}
+button {
+  cursor: pointer;
+  padding: 8px;
+  background: #007acc;
+  color: white;
+  border: none;
+}
+button:hover {
+  background: #0062a3;
+}
+#diagnostics {
+  font-size: 11px;
+  margin-top: 5px;
+  font-family: sans-serif;
+}
+.error {
+  color: #f48771;
+  margin-bottom: 2px;
+}
+.success {
+  color: #89d185;
+  margin-bottom: 2px;
+}
