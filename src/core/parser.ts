@@ -34,9 +34,11 @@ export function parseBlocks(input: string): PatchBlock[] {
 
     if (replaceMatch) {
       if (replaceMatch[1] === currentIndex) {
+        const searchContent = searchBuffer.join('\n');
         blocks.push({
           index: currentIndex,
-          search: searchBuffer.join('\n'),
+          search: searchContent,
+          searchMeat: searchContent.replace(/\s+/g, ''),
           replace: replaceBuffer.join('\n'),
         });
       }

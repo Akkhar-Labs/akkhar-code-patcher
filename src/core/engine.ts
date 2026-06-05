@@ -8,7 +8,8 @@ import { PatchBlock, MatchResult } from '../types/patch';
 
 /**
  * Identifies the line-based coordinates for a set of surgical blocks.
- * Uses a sliding-window algorithm to handle line-ending and whitespace variations.
+ * V5.1 Engine: Implements 'Gravity-Shift Mapping' with exhaustive candidate
+ * collection and range-shrinking deduplication to resolve whitespace ambiguity.
  */
 export function findMatches(
   docLines: string[],
@@ -16,41 +17,61 @@ export function findMatches(
   onError: (message: string, block?: PatchBlock) => void,
 ): MatchResult[] | null {
   const matches: MatchResult[] = [];
+  const getMeat = (s: string) => s.replace(/\s+/g, '');
 
   for (const block of blocks) {
-    const searchLines = block.search.split('\n');
-    let foundLineIndex = -1;
+    const targetMeat = block.searchMeat;
+    const candidates: { start: number; end: number }[] = [];
 
-    for (let i = 0; i <= docLines.length - searchLines.length; i++) {
-      let isMatch = true;
-      for (let j = 0; j < searchLines.length; j++) {
-        // Structural comparison: Ignore both leading and trailing whitespace to handle AI indentation drift
-        if (docLines[i + j].trim() !== searchLines[j].trim()) {
-          isMatch = false;
+    // Step A: Exhaustive Candidate Collection
+    for (let i = 0; i < docLines.length; i++) {
+      let currentBuffer = '';
+      for (let j = i; j < docLines.length; j++) {
+        currentBuffer += getMeat(docLines[j]);
+
+        if (currentBuffer === targetMeat) {
+          candidates.push({ start: i, end: j });
+          break;
+        }
+
+        if (currentBuffer.length > targetMeat.length) {
           break;
         }
       }
-
-      if (isMatch) {
-        if (foundLineIndex !== -1) {
-          onError(
-            `Block [${block.index}] is ambiguous (multiple matches found).`,
-            block,
-          );
-          return null;
-        }
-        foundLineIndex = i;
-      }
     }
 
-    if (foundLineIndex === -1) {
+    if (candidates.length === 0) {
       onError(`Block [${block.index}] not found in the source content.`, block);
       return null;
     }
 
+    // Step B & C: Range Shrinking (Gravity Filter) and Deduplication
+    const uniqueMatches = new Map<string, { start: number; end: number }>();
+
+    for (const candidate of candidates) {
+      let s = candidate.start;
+      let e = candidate.end;
+
+      // Shrink range from top and bottom to discard surrounding whitespace-only lines
+      while (s < e && docLines[s].trim().length === 0) s++;
+      while (e > s && docLines[e].trim().length === 0) e--;
+
+      uniqueMatches.set(`${s}-${e}`, { start: s, end: e });
+    }
+
+    if (uniqueMatches.size > 1) {
+      onError(
+        `Block [${block.index}] is ambiguous (multiple matches found).`,
+        block,
+      );
+      return null;
+    }
+
+    const finalCoords = Array.from(uniqueMatches.values())[0];
+
     matches.push({
-      startLine: foundLineIndex,
-      endLine: foundLineIndex + searchLines.length - 1,
+      startLine: finalCoords.start,
+      endLine: finalCoords.end,
       replace: block.replace,
       index: block.index,
     });

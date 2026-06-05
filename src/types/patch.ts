@@ -1,6 +1,7 @@
 export interface PatchBlock {
   index: string;
   search: string;
+  searchMeat: string;
   replace: string;
 }
 
